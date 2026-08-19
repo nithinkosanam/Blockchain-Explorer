@@ -95,4 +95,178 @@ router.get("/:address/tokens", validateAddress, async (req, res) => {
   }
 });
 
+
+router.get("/:address/transfers", validateAddress, async (req, res) => {
+  try {
+    const address = req.params.address;
+
+    const result = await alchemyRequest(
+      "alchemy_getAssetTransfers",
+      [
+        {
+          fromAddress: address,
+          category: [
+            "external",
+            "erc20",
+            "erc721",
+            "erc1155"
+          ],
+          withMetadata: true,
+          maxCount: "0x64"
+        }
+      ]
+    );
+
+    const transfers = result.transfers.map((transfer) => ({
+      blockNum: transfer.blockNum,
+      hash: transfer.hash,
+      from: transfer.from,
+      to: transfer.to,
+      value: transfer.value,
+      asset: transfer.asset,
+      category: transfer.category,
+      rawContract: transfer.rawContract,
+      metadata: transfer.metadata
+    }));
+
+    res.json({
+      address,
+      direction: "sent",
+      transfers
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Failed to fetch token transfers"
+    });
+  }
+});
+
+
+router.get("/:address/received", validateAddress, async (req, res) => {
+  try {
+    const address = req.params.address;
+
+    const result = await alchemyRequest(
+      "alchemy_getAssetTransfers",
+      [
+        {
+          toAddress: address,
+          category: [
+            "external",
+            "erc20",
+            "erc721",
+            "erc1155"
+          ],
+          withMetadata: true,
+          maxCount: "0x64"
+        }
+      ]
+    );
+
+    const transfers = result.transfers.map((transfer) => ({
+      blockNum: transfer.blockNum,
+      hash: transfer.hash,
+      from: transfer.from,
+      to: transfer.to,
+      value: transfer.value,
+      asset: transfer.asset,
+      category: transfer.category,
+      rawContract: transfer.rawContract,
+      metadata: transfer.metadata
+    }));
+
+    res.json({
+      address,
+      direction: "received",
+      transfers
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Failed to fetch received transfers"
+    });
+  }
+});
+
+
+router.get("/:address/activity", validateAddress, async (req, res) => {
+  try {
+    const address = req.params.address;
+
+    const [sentResult, receivedResult] = await Promise.all([
+      alchemyRequest(
+        "alchemy_getAssetTransfers",
+        [
+          {
+            fromAddress: address,
+            category: [
+              "external",
+              "erc20",
+              "erc721",
+              "erc1155"
+            ],
+            withMetadata: true,
+            maxCount: "0x64"
+          }
+        ]
+      ),
+
+      alchemyRequest(
+        "alchemy_getAssetTransfers",
+        [
+          {
+            toAddress: address,
+            category: [
+              "external",
+              "erc20",
+              "erc721",
+              "erc1155"
+            ],
+            withMetadata: true,
+            maxCount: "0x64"
+          }
+        ]
+      )
+    ]);
+
+    const sent = sentResult.transfers.map((transfer) => ({
+      ...transfer,
+      direction: "sent"
+    }));
+
+    const received = receivedResult.transfers.map((transfer) => ({
+      ...transfer,
+      direction: "received"
+    }));
+
+    const activity = [...sent, ...received];
+
+    activity.sort((a, b) => {
+      const timeA = a.metadata?.blockTimestamp
+        ? new Date(a.metadata.blockTimestamp).getTime()
+        : 0;
+
+      const timeB = b.metadata?.blockTimestamp
+        ? new Date(b.metadata.blockTimestamp).getTime()
+        : 0;
+
+      return timeB - timeA;
+    });
+
+    res.json({
+      address,
+      activity
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Failed to fetch wallet activity"
+    });
+  }
+});
+
 module.exports = router;
