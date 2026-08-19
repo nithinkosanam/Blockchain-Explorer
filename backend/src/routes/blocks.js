@@ -1,6 +1,9 @@
 const express = require("express");
 const { provider } = require("../services/blockchain");
-const { saveBlock } = require("../services/blockService");
+const {
+  saveBlock,
+  saveTransaction
+} = require("../services/blockService");
 const router = express.Router();
 const prisma = require("../db/prisma");
 
@@ -8,7 +11,28 @@ const prisma = require("../db/prisma");
 router.get("/latest", async (req, res) => {
   try {
     const block = await provider.getBlock("latest");
+
+    if (!block) {
+      return res.status(404).json({
+        error: "Latest block not found"
+      });
+    }
+
     await saveBlock(block);
+
+    const transactions = [];
+
+    for (const hash of block.transactions) {
+      const transaction = await provider.getTransaction(hash);
+
+      if (!transaction) {
+        continue;
+      }
+
+      await saveTransaction(transaction, block);
+
+      transactions.push(transaction);
+    }
 
     res.json({
       number: block.number,
@@ -17,8 +41,14 @@ router.get("/latest", async (req, res) => {
       timestamp: block.timestamp,
       gasLimit: block.gasLimit.toString(),
       gasUsed: block.gasUsed.toString(),
-      transactionCount: block.transactions.length,
-      transactions: block.transactions
+      transactionCount: transactions.length,
+      transactions: transactions.map((tx) => ({
+        hash: tx.hash,
+        from: tx.from,
+        to: tx.to,
+        value: tx.value.toString(),
+        nonce: tx.nonce
+      }))
     });
   } catch (error) {
     console.error(error);

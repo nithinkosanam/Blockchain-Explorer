@@ -2,6 +2,33 @@ const express = require("express");
 const { provider } = require("../services/blockchain");
 
 const router = express.Router();
+const prisma = require("../db/prisma");
+
+
+router.get("/stored/:hash", async (req, res) => {
+  try {
+    const transaction = await prisma.transaction.findUnique({
+      where: {
+        hash: req.params.hash
+      }
+    });
+
+    if (!transaction) {
+      return res.status(404).json({
+        error: "Transaction not found in database"
+      });
+    }
+
+    res.json(transaction);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Failed to fetch stored transaction"
+    });
+  }
+});
+
 
 router.get("/:hash", async (req, res) => {
   try {
