@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Block {
+  id              Int      @id @default(autoincrement())
+  number          Int      @unique
+  hash            String   @unique
+  parentHash      String?
+  timestamp       DateTime
+  gasLimit        String
+  gasUsed         String
+  transactionCount Int
+
+  createdAt       DateTime @default(now())
+
+  transactions    Transaction[]
+}
+
+model Transaction {
+  id          Int      @id @default(autoincrement())
+  hash        String   @unique
+
+  blockNumber Int?
+  blockHash   String?
+
+  from        String
+  to          String?
+
+  value       String
+  gasLimit    String
+  gasPrice    String?
+
+  nonce       Int
+  data        String
+
+  status      Int?
+  gasUsed     String?
+
+  createdAt   DateTime @default(now())
+
+  block       Block?   @relation(fields: [blockNumber], references: [number])
+}

@@ -9,6 +9,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const transactionsRouter = require("./routes/transactions");
 const walletsRouter = require("./routes/wallets");
+const prisma = require("./db/prisma");
 
 app.use(cors());
 app.use(helmet());
@@ -27,6 +28,24 @@ app.get("/api/health", (req, res) => {
     status: "ok"
   });
 });
+
+
+app.get("/api/db-test", async (req, res) => {
+  try {
+    const blockCount = await prisma.block.count();
+
+    res.json({
+      database: "connected",
+      blockCount
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      database: "connection failed"
+    });
+  }
+}); 
 
 // Blockchain routes
 app.use("/api/blocks", blocksRouter);
