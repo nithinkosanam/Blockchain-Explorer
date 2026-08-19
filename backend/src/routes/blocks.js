@@ -1,12 +1,14 @@
 const express = require("express");
 const { provider } = require("../services/blockchain");
-
+const { saveBlock } = require("../services/blockService");
 const router = express.Router();
+const prisma = require("../db/prisma");
 
 // Get the latest block
 router.get("/latest", async (req, res) => {
   try {
     const block = await provider.getBlock("latest");
+    await saveBlock(block);
 
     res.json({
       number: block.number,
@@ -64,5 +66,31 @@ router.get("/:number", async (req, res) => {
     });
   }
 });
+
+
+router.get("/stored/latest", async (req, res) => {
+  try {
+    const block = await prisma.block.findFirst({
+      orderBy: {
+        number: "desc"
+      }
+    });
+
+    if (!block) {
+      return res.status(404).json({
+        error: "No blocks stored"
+      });
+    }
+
+    res.json(block);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Failed to fetch stored block"
+    });
+  }
+});
+
 
 module.exports = router;
