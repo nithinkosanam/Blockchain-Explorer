@@ -8,6 +8,7 @@ const blocksRouter = require("./routes/blocks");
 const app = express();
 const PORT = process.env.PORT || 3000;
 const transactionsRouter = require("./routes/transactions");
+const walletsRouter = require("./routes/wallets");
 
 app.use(cors());
 app.use(helmet());
@@ -30,6 +31,7 @@ app.get("/api/health", (req, res) => {
 // Blockchain routes
 app.use("/api/blocks", blocksRouter);
 app.use("/api/transactions", transactionsRouter);
+app.use("/api/wallets", walletsRouter);
 
 app.listen(PORT, () => {
   console.log(`Backend running on http://localhost:${PORT}`);
