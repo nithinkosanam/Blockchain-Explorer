@@ -94,3 +94,51 @@ main {
   font-size: 14px !important;
   word-break: break-all;
 }
+
+.detail-card {
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  margin: 25px 0 40px;
+  display: grid;
+  gap: 25px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.detail-card div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detail-card span {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.transaction-list,
+.token-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.transaction-row,
+.token-row {
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.transaction-row:hover {
+  background: #f3f4f6;
+}
+
+.token-row {
+  align-items: center;
+}
