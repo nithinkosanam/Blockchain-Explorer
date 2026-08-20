@@ -269,4 +269,31 @@ router.get("/:address/activity", validateAddress, async (req, res) => {
   }
 });
 
+router.get("/:address/analytics", async (req, res) => {
+  try {
+    const { address } = req.params;
+
+    if (!ethers.isAddress(address)) {
+      return res.status(400).json({
+        error: "Invalid Ethereum address"
+      });
+    }
+
+    const balance = await provider.getBalance(address);
+
+    res.json({
+      address,
+      ethBalance: ethers.formatEther(balance),
+      ethBalanceWei: balance.toString()
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Failed to load wallet analytics"
+    });
+  }
+});
+
+
 module.exports = router;

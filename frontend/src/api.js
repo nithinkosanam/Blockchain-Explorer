@@ -39,3 +39,11 @@ export async function getWalletActivity(address) {
 
   return response.data;
 }
+
+export async function getWalletAnalytics(address) {
+  const response = await API.get(
+    `/wallets/${address}/analytics`
+  );
+
+  return response.data;
+}

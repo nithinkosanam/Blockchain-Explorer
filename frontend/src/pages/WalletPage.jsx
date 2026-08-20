@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
-  getWallet,
+  getWalletAnalytics,
   getWalletTokens,
   getWalletActivity
 } from "../api";
 
 function WalletPage() {
   const { address } = useParams();
+  
+  const [analytics, setAnalytics] = useState(null);
 
   const [wallet, setWallet] = useState(null);
   const [tokens, setTokens] = useState([]);
@@ -18,24 +20,27 @@ function WalletPage() {
 
   useEffect(() => {
     async function loadWallet() {
-      try {
-        const [balanceData, tokenData, activityData] =
-          await Promise.all([
-            getWallet(address),
+        try {
+            const [
+            analyticsData,
+            tokenData,
+            activityData
+            ] = await Promise.all([
+            getWalletAnalytics(address),
             getWalletTokens(address),
             getWalletActivity(address)
-          ]);
+            ]);
 
-        setWallet(balanceData);
-        setTokens(tokenData.tokens);
-        setActivity(activityData.activity);
-      } catch (err) {
-        console.error(err);
-        setError("Failed to load wallet");
-      } finally {
-        setLoading(false);
-      }
-    }
+            setAnalytics(analyticsData);
+            setTokens(tokenData.tokens || []);
+            setActivity(activityData.activity || []);
+        } catch (err) {
+            console.error(err);
+            setError("Failed to load wallet");
+        } finally {
+            setLoading(false);
+        }
+        }
 
     loadWallet();
   }, [address]);
@@ -54,21 +59,52 @@ function WalletPage() {
 
       <h1>Wallet</h1>
 
-      <div className="detail-card">
+      <div className="wallet-header">
         <div>
-          <span>Address</span>
-          <strong className="hash">
+            <span>Wallet Address</span>
+
+            <strong className="hash">
             {address}
-          </strong>
+            </strong>
         </div>
 
-        <div>
-          <span>ETH Balance</span>
-          <strong>
-            {wallet?.balanceEth} ETH
-          </strong>
+        <div className="portfolio-value">
+            <span>ETH Balance</span>
+
+            <strong>
+            {analytics?.ethBalance || "0"} ETH
+            </strong>
         </div>
-      </div>
+        </div>
+
+        <section className="analytics-section">
+        <h2>Portfolio Breakdown</h2>
+
+        <div className="portfolio-grid">
+
+            <div className="portfolio-card">
+            <span>ETH</span>
+
+            <strong>
+                {analytics?.ethBalance || "0"} ETH
+            </strong>
+            </div>
+
+            {tokens.map((token) => (
+            <div
+                className="portfolio-card"
+                key={token.contractAddress}
+            >
+                <span>{token.name}</span>
+
+                <strong>
+                {token.balance} {token.symbol}
+                </strong>
+            </div>
+            ))}
+
+        </div>
+        </section>
 
       <h2>Token Holdings</h2>
 
